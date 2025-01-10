@@ -70,14 +70,20 @@ You will need to install KEDA if it is not already available on your cluster. In
 
 > If KEDA was already installed to your cluster and you intend to use it to complete the CodeLab:<br>_It may be necessary to update the installation OR to uninstall keda and then re-install it if the Solace Scaler is not available in your installed version of KEDA. The Solace Scaler is available in KEDA core starting with version 2.4_.
 
-### Add Helm repo (if not already added)
+### Add Helm repo for Keda (if not already added)
 ```
 helm repo add kedacore https://kedacore.github.io/charts
+```
+### Add Helm repo for Solace PubSubPlus Event Broker (if not already added)
+```
+helm repo add solacecharts https://solaceproducts.github.io/pubsubplus-kubernetes-helm-quickstart/helm-charts
 ```
 ### Update Helm repo
 ```
 helm repo update
 ```
+All steps described here up until the [Create scaledObject with Solace Queue Trigger](#create-scaledobject-with-solace-queue-trigger) can be skipped by using the provided script 'start-cluster.sh'
+
 ### Create keda namespace
 ```
 kubectl create namespace keda
@@ -86,7 +92,7 @@ kubectl create namespace keda
 ```
 helm install keda kedacore/keda -n keda
 ```
-###Check your installation
+### Check your installation
 ```
 ## Make sure that the deployments/pods are Ready!
 kubectl get deployments -n keda
@@ -95,17 +101,9 @@ kubectl get pods -n keda
 ## Solace PubSub+ Software Event Broker - Helm Chart
 Follow the instructions to install a Solace PubSub+ Event Broker to your Kubernetes cluster.  
 The broker will be installed to `namespace=solace`.  
-The broker will be created with an administrative user=**admin** and password=**KedaLabAdminPwd1**.  
+The broker will be created with an administrative user=**admin** and password=**admin**.  
 We will configure the broker subsequently in the next section.
 
-### Add Helm repo
-```
-helm repo add solacecharts https://solaceproducts.github.io/pubsubplus-kubernetes-helm-quickstart/helm-charts
-```
-### Update Helm repo
-```
-helm repo update
-```
 ### Create solace namespace
 ```
 kubectl create namespace solace
@@ -120,7 +118,7 @@ kubectl config view --minify | grep namespace:
 
 ### Install the broker
 Make sure to get a local copy of the values.yaml from here: https://github.com/SolaceDev/pubsubplus-kubernetes-helm-quickstart/blob/master/pubsubplus/values.yaml if you are on a Mac and save it as `values-mac.yaml`
-Adjust the section for port 55555 on lines 161 - 164 as below:
+Adjust the section for port 55555 on lines 161 - 164 as below when you are a Mac user. All other users can leave the servicePort as is.
 ```
       - servicePort: 55554
         containerPort: 55555
@@ -128,12 +126,20 @@ Adjust the section for port 55555 on lines 161 - 164 as below:
         name: tcp-smf
 ```
 
-Install the broker with the values-mac.yaml file
+Install the broker with the values-mac.yaml file and admin password `admin`
 ```
 ##  This installation will use ephemereal storage, which means if pod is shut down and restored, the configuration will be lost.
-helm install kedalab solacecharts/pubsubplus-dev -f values-mac.yaml -n solace --set solace.usernameAdminPassword=admin --set storage.persistent=false
+helm install kedalab solacecharts/pubsubplus-dev -f values-mac.yaml -n solace \
+    --set solace.usernameAdminPassword=admin \
+    --set storage.persistent=false
 ```
 
+If you are on windows or linux you can run below command to deploy the broker with admin password `admin`.
+```shell
+helm install kedalab solacecharts/pubsubplus-dev -n solace \
+  --set solace.usernameAdminPassword=admin 
+  --set storage.persistent=false
+```
 ### Wait and Verify
 ```
 ## Command will hold until the pod = kedalab-pubsubplus-dev-0 is ready for use
@@ -145,12 +151,11 @@ kubectl get statefulsets kedalab-pubsubplus-dev -n solace -o wide
 kubectl get pods kedalab-pubsubplus-dev-0 -n solace -o wide
 ```
 
-### Portforwarding to be able to access the broker Admin UI in a browser
+### Portforwarding to be able to access the broker Admin UI in a browser (Not needed if you use Docker Desktop)
 ```
 kubectl port-forward -n solace kedalab-pubsubplus-dev-0 8080:8080 
 ```
-
-Run the broker admin UI by `http://localhost:8080` 
+Run the broker admin UI by `http://localhost:8080` and login with user `admin` and password `admin`.
 
 ## Deploy apps and configure Solace Broker
 
@@ -207,12 +212,20 @@ kubectl create secret -n solace generic solace-consumer-secret \
   --from-literal=solace.client.pwd=consumer_pwd \
   --save-config --dry-run=client -o yaml | kubectl apply -f -
 ```
-### Create the solace consumer configMap
+### Create the solace consumer configMap for Mac users
 
-```shell
+```MacOS
 kubectl delete configmap -n solace generic solace-consumer-configmap --ignore-not-found
 kubectl create configmap -n solace solace-consumer-configmap \
   --from-literal=solace.client.port=55554 \
+  --save-config --dry-run=client -o yaml | kubectl apply -f -  
+```
+### Create the solace consumer configMap for Non-Mac users
+
+```Non-MacOs
+kubectl delete configmap -n solace generic solace-consumer-configmap --ignore-not-found
+kubectl create configmap -n solace solace-consumer-configmap \
+  --from-literal=solace.client.port=55555 \
   --save-config --dry-run=client -o yaml | kubectl apply -f -  
 ```
 
@@ -220,8 +233,6 @@ kubectl create configmap -n solace solace-consumer-configmap \
 ```
 kubectl apply -f config/solace-consumer.yaml
 ```
-
-Note: when on MacOs make sure to point the -f to a local file that uses port 55554 instead of 55555 (which is the default)
 
 #### Verify that the consumer is deployed and ready
 ```
@@ -295,9 +306,11 @@ We will publish messages to the queue of sufficient volume that KEDA and HPA wil
 
 ### Publish Messages
 We will use SDK-Perf (Java Command-Line app) to write messages to the queue read by the solace-consumer application. SDK-Perf is available on the kedalab-helper pod and we will execute it from there. At this point, there should be no active instances of the solace-consumer application. We will publish 400 messages to the queue at a rate of 50 messages per second. Each message will have a 256 byte payload. On your command line, enter:
-
 ```
-kubectl exec kedalab-helper -n solace -- ./sdkperf/sdkperf_java.sh -cip=kedalab-pubsubplus-dev:55554 -cu consumer_user@keda_vpn -cp=consumer_pwd -mr 50 -mn 400 -msx 256 -mt=persistent -pql=SCALED_CONSUMER_QUEUE1
+kubectl exec kedalab-helper -n solace -- ./sdkperf/sdkperf_java.sh \
+    -cip=kedalab-pubsubplus-dev:55554 \ 
+    -cu consumer_user@keda_vpn \ 
+    -cp=consumer_pwd -mr 50 -mn 400 -msx 256 -mt=persistent -pql=SCALED_CONSUMER_QUEUE1
 ```
 Note: If running on MacOS ,  make sure to use port 55554 instead of port 55555. Port 55555 is a reserved port on MacOS
 
@@ -359,9 +372,9 @@ Behavior:
 ```
 
 ### Publish Messages
-We will publish a load of messages as before: 400 messages total at a rate of 50 messages per second.
+We will publish a load of messages as before: 500 messages total at a rate of 50 messages per second.
 ```
-kubectl exec -n solace kedalab-helper -n solace -- ./sdkperf/sdkperf_java.sh -cip=kedalab-pubsubplus-dev:55554 -cu consumer_user@keda_vpn -cp=consumer_pwd -mr 50 -mn 400 -msx 256 -mt=persistent -pql=SCALED_CONSUMER_QUEUE1
+kubectl exec -n solace kedalab-helper -n solace -- ./sdkperf/sdkperf_java.sh -cip=kedalab-pubsubplus-dev:55554 -cu consumer_user@keda_vpn -cp=consumer_pwd -mr 50 -mn 500 -msx 512 -mt=persistent -pql=SCALED_CONSUMER_QUEUE1
 ```
 
 ### Observe Scaling
@@ -374,7 +387,11 @@ View the the scaling of solace-consumer deployment in the command line window Up
 - KEDA scales the application zero replicas
 
 ## Cleanup
+The cleanup can be achieved by executing the script 'stop-cluster.sh'. This will remove all created objects.
 
+```shell
+./stop-cluster.sh
+```
 ### Delete the KEDA Scaled Object
 Deletes the ScaledObject, TriggerAuthentication, and Secret
 ```

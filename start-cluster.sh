@@ -1,4 +1,15 @@
 #!/bin/bash
+
+case "$OSTYPE" in
+  darwin*)
+    VALUES='-f values-mac.yaml'
+    PORT=55554
+  ;;
+  *)
+    VALUES=''
+    PORT=55555
+esac
+
 echo Create Namespace 'keda'
 kubectl create namespace keda
 
@@ -11,7 +22,7 @@ echo Create Namespace 'solace'
 kubectl create namespace solace
 
 echo Deploy Solace PubSubPlus Eeven Broker
-helm install kedalab solacecharts/pubsubplus-dev -f values-mac.yaml -n solace \
+helm install kedalab solacecharts/pubsubplus-dev $VALUES -n solace \
   --set solace.usernameAdminPassword=admin \
   --set storage.persistent=false
 
@@ -46,7 +57,7 @@ kubectl create secret -n solace generic solace-consumer-secret \
 
 echo Create ConfigMap 'solace-consumer-configmap'
 kubectl create configmap -n solace solace-consumer-configmap \
-  --from-literal=solace.client.port=55554 \
+  --from-literal=solace.client.port=$PORT \
   --save-config --dry-run=client -o yaml | kubectl apply -f -
 
 echo Create Pod 'solace-consumer'

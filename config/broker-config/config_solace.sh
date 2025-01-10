@@ -4,10 +4,6 @@
 SCRIPT_DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" &> /dev/null && pwd )"
 SOLACE_HOST="http://kedalab-pubsubplus-dev:8080"
 VPN_NAME="keda_vpn"
-## admin:admin
-## HDR_AUTH="Authorization: Basic YWRtaW46YWRtaW4="
-#ADMIN_USER="admin"
-#ADMIN_PWD="KedaLabAdminPwd1"
 HDR_CONTENT_TYPE="Content-Type: application/json"
 
 SEMP_BASE_URL="${SOLACE_HOST}/SEMP/v2/config/msgVpns"
