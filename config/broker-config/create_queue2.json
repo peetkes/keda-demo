@@ -1,0 +1,10 @@
+{
+  "msgVpnName": "keda_vpn",
+  "queueName": "SCALED_CONSUMER_QUEUE2",
+  "ingressEnabled": true,
+  "egressEnabled": true,
+  "permission": "consume",
+  "accessType": "non-exclusive",
+  "respectTtlEnabled": true,
+  "maxMsgSpoolUsage": 1500
+}

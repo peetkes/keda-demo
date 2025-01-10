@@ -1,0 +1,7 @@
+{
+  "enabled": true,
+  "maxMsgSpoolUsage": 250,
+  "msgVpnName": "keda_vpn",
+  "authenticationBasicEnabled": true,
+  "authenticationBasicType": "internal"
+}
