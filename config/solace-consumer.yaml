@@ -27,7 +27,10 @@ spec:
           - name:  SOLACE_CLIENT_HOST
             value: tcp://kedalab-pubsubplus-dev:$(SOLACE_CLIENT_PORT)
           - name:  SOLACE_CLIENT_MSGVPN
-            value: keda_vpn
+            valueFrom:
+              configMapKeyRef:
+                name: solace-consumer-configmap
+                key: solace.vpn.name
           - name:  SOLACE_CLIENT_USERNAME
             valueFrom:
               secretKeyRef:

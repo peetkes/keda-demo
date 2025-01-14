@@ -58,6 +58,7 @@ kubectl create secret -n solace generic solace-consumer-secret \
 echo Create ConfigMap 'solace-consumer-configmap'
 kubectl create configmap -n solace solace-consumer-configmap \
   --from-literal=solace.client.port=$PORT \
+  --from-literal=solace.vpn.name=default \
   --save-config --dry-run=client -o yaml | kubectl apply -f -
 
 echo Create Pod 'solace-consumer'

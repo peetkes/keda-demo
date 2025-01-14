@@ -1,10 +1,11 @@
 {
   "msgVpnName": "default",
-  "queueName": "SCALED_CONSUMER_QUEUE2",
+  "queueName": "pq12",
   "ingressEnabled": true,
   "egressEnabled": true,
   "permission": "consume",
   "accessType": "non-exclusive",
   "respectTtlEnabled": true,
-  "maxMsgSpoolUsage": 1500
+  "maxMsgSpoolUsage": 1500,
+  "partitionCount": 12
 }

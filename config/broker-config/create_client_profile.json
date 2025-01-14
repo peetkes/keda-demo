@@ -1,5 +1,5 @@
 {
-  "msgVpnName": "keda_vpn",
+  "msgVpnName": "default",
   "clientProfileName": "keda_client_profile",
   "allowSharedSubscriptionsEnabled" : true,
   "allowGuaranteedMsgReceiveEnabled" : true,

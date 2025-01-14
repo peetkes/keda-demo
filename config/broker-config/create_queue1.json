@@ -1,5 +1,5 @@
 {
-  "msgVpnName": "keda_vpn",
+  "msgVpnName": "default",
   "queueName": "SCALED_CONSUMER_QUEUE1",
   "ingressEnabled": true,
   "egressEnabled": true,

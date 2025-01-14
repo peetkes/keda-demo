@@ -1,0 +1,40 @@
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: solace-pqdemo-subscriber
+  namespace: solace
+spec:
+  selector:
+    matchLabels:
+      app: pqdemo-subscriber
+  template:
+    metadata:
+      labels:
+        app: pqdemo-subscriber
+    spec:
+      volumes:
+      - name: consumer-config-file
+        secret:
+          secretName: solace-pqdemo-secrets
+      - name: tz-config
+        hostPath:
+          path: /usr/share/zoneinfo/Europe/Amsterdam
+      containers:
+      - name: solace-pqdemo-subscriber-1
+        image: solace-pqdemo-subscriber:latest
+        resources:
+          limits:
+            cpu: 2
+            memory: 256Mi
+          requests:
+            cpu: 0.5
+            memory: 128Mi
+        volumeMounts:
+          - mountPath: /opt/partitioned-queue-demo/k8s-config
+            name: consumer-config-file
+            readOnly: true
+          - name: tz-config
+            mountPath: /etc/localtime
+        imagePullPolicy: Never
+      restartPolicy: Always

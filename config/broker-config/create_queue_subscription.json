@@ -1,0 +1,5 @@
+{
+  "msgVpnName": "default",
+  "queueName": "pq12",
+  "subscriptionTopic": "pq12/>"
+}

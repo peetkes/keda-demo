@@ -1,0 +1,26 @@
+## Dockerfile for solace-pqdemo-subscriber
+## Image to configure and exec solace-pqdemo-subscriber against Solace PubSub+ broker to showcase
+## KEDA managed scalability with Solace partitioned queues
+
+FROM openjdk:17-jdk-slim
+
+ENV SUB_ACK_WINDOW_SIZE=64
+
+RUN mkdir -p /opt/partitioned-queue-demo
+WORKDIR /opt/partitioned-queue-demo
+
+
+# after doing ./gradlew assemble, copy all the build/staged into the Docker image
+COPY build/staged/ ./
+
+# run the subscriber, passing in a single argument "props" to signal that it needs to load connection
+# information from environment variables
+CMD ["./bin/PQSubscriber", "props"] 
+
+
+####   BUILD:
+####
+####     docker build -t solace-pqdemo-subscriber:latest --file PQDemoDockerfile .
+####
+####     export CR_PAT=$(cat ~/.ghp_pat)
+####     echo $CR_PAT | docker login ghcr.io -u USERNAME --password-stdin
