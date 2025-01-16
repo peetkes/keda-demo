@@ -1,0 +1,7 @@
+{
+  "clientProfileName": "keda_client_profile",
+  "clientUsername": "consumer_user",
+  "enabled": true,
+  "msgVpnName": "keda_vpn",
+  "password": "consumer_pwd"
+}

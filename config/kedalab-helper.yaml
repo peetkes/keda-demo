@@ -28,8 +28,14 @@ spec:
       volumeMounts:
         - name: kedalab-solace-configmap
           mountPath: /keda-config
+        - name: pqdemo-solace-configmap
+          mountPath: /pqdemo-config
   volumes:
     - name: kedalab-solace-configmap
       configMap:
         name: kedalab-solace-configmap
+        defaultMode: 0744
+    - name: pqdemo-solace-configmap
+      configMap:
+        name: pqdemo-solace-configmap
         defaultMode: 0744

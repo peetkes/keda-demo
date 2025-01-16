@@ -3,7 +3,9 @@ apiVersion: apps/v1
 kind: Deployment
 metadata:
   name: solace-pqdemo-subscriber
-  namespace: solace
+  namespace: pq-demo
+  labels:
+    app: pqdemo-subscriber
 spec:
   selector:
     matchLabels:

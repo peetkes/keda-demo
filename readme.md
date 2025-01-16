@@ -83,7 +83,7 @@ helm repo add solacecharts https://solaceproducts.github.io/pubsubplus-kubernete
 ```
 helm repo update
 ```
-All steps described here up until the [Create scaledObject with Solace Queue Trigger](#create-scaledobject-with-solace-queue-trigger) can be skipped by using the provided script 'start-cluster.sh'
+The next 3 steps can be executed by running script `start-keda.sh`
 
 ### Create keda namespace
 ```
@@ -99,11 +99,18 @@ helm install keda kedacore/keda -n keda
 kubectl get deployments -n keda
 kubectl get pods -n keda
 ```
+Or 
+```shell
+./start-keda.sh
+```
+
 ## Solace PubSub+ Software Event Broker - Helm Chart
 Follow the instructions to install a Solace PubSub+ Event Broker to your Kubernetes cluster.  
 The broker will be installed to `namespace=solace`.  
 The broker will be created with an administrative user=**admin** and password=**admin**.  
 We will configure the broker subsequently in the next section.
+
+The next steps until [Create scaledObject with Solace Queue Trigger](#create_scaledobject_with_solace_queue_trigger) can also be executed by running script `start-solace.sh`
 
 ### Create solace namespace
 ```
@@ -171,7 +178,16 @@ kubectl create secret -n solace generic kedalab-solace-secret \
 ```shell
 kubectl delete configmap -n solace generic kedalab-solace-configmap --ignore-not-found
 kubectl create configmap -n solace kedalab-solace-configmap \
-  --from-file config/broker-config \
+  --from-file config/broker-config/keda-demo \
+  --save-config --dry-run=client -o yaml | kubectl apply -f -  
+```
+
+### Create the pqdemo solace configMap from folder
+
+```shell
+kubectl delete configmap -n solace generic pqdemo-solace-configmap --ignore-not-found
+kubectl create configmap -n solace pqdemo-solace-configmap \
+  --from-file config/broker-config/pq-demo \
   --save-config --dry-run=client -o yaml | kubectl apply -f -  
 ```
 
@@ -233,6 +249,11 @@ kubectl apply -f config/solace-consumer.yaml
 ```
 kubectl get deployments -n solace
 kubectl get pods -n solace
+```
+
+Or run all previous setps with
+```shell
+./start-solace.sh
 ```
 
 ## Create scaledObject with Solace Queue Trigger
@@ -302,10 +323,7 @@ We will publish messages to the queue of sufficient volume that KEDA and HPA wil
 ### Publish Messages
 We will use SDK-Perf (Java Command-Line app) to write messages to the queue read by the solace-consumer application. SDK-Perf is available on the kedalab-helper pod and we will execute it from there. At this point, there should be no active instances of the solace-consumer application. We will publish 400 messages to the queue at a rate of 50 messages per second. Each message will have a 256 byte payload. On your command line, enter:
 ```
-kubectl exec kedalab-helper -n solace -- ./sdkperf/sdkperf_java.sh \
-    -cip=kedalab-pubsubplus-dev:55554 \ 
-    -cu consumer_user@keda_vpn \ 
-    -cp=consumer_pwd -mr 50 -mn 400 -msx 256 -mt=persistent -pql=SCALED_CONSUMER_QUEUE1
+kubectl exec kedalab-helper -n solace -- ./sdkperf/sdkperf_java.sh -cip=kedalab-pubsubplus-dev:55554 -cu consumer_user@keda_vpn -cp=consumer_pwd -mr 50 -mn 400 -msx 256 -mt=persistent -pql=SCALED_CONSUMER_QUEUE1
 ```
 Note: If running on MacOS ,  make sure to use port 55554 instead of port 55555. Port 55555 is a reserved port on MacOS
 
@@ -392,6 +410,12 @@ Now we have to create the image for the pq-demo subscriber
 ```shell
 ./gradlew assemble
 docker build -t solace-pqdemo-subscriber:latest --file PQDemoDockerfile .
+```
+### Configure Solace PubSub+ Event Broker
+Next, we will execute a script included on kedalab-helper to configure our Solace PubSub+ Event Broker with the objects necessary for the code lab. Execute the following command to configure the Event Broker:
+
+```
+kubectl exec kedalab-helper -n solace -- /pqdemo-config/config_solace.sh
 ```
 
 ### Deploy pq-demo subscriber
@@ -562,7 +586,7 @@ Note that when performing a graceful quit, the Subscriber will delay how long it
 The cleanup can be achieved by executing the script 'stop-cluster.sh'. This will remove all created objects.
 
 ```shell
-./stop-cluster.sh
+./stop-solace.sh
 ```
 ### Delete the KEDA Scaled Object
 Deletes the ScaledObject, TriggerAuthentication, and Secret

@@ -1,24 +1,24 @@
 apiVersion: keda.sh/v1alpha1
 kind: TriggerAuthentication
 metadata:
-  name: kedalab-trigger-auth
-  namespace: solace
+  name: pqdemo-trigger-auth
+  namespace: pq-demo
   labels:
-    app: kedalab-trigger-auth
+    app: pqdemo-trigger-auth
 spec:
   secretTargetRef:
     - parameter:   username
-      name:        kedalab-solace-secret
+      name:        pqdemo-solace-secret
       key:         SEMP_USER
     - parameter:   password
-      name:        kedalab-solace-secret
+      name:        pqdemo-solace-secret
       key:         SEMP_PASSWORD
 ---
 apiVersion: keda.sh/v1alpha1
 kind: ScaledObject
 metadata:
   name:      pqdemo-scaled-object
-  namespace: solace
+  namespace: pq-demo
   labels:
     app: pqdemo-scaled-object
 spec:
@@ -60,4 +60,4 @@ spec:
       messageReceiveRateTarget: '90'
 #      messageSpoolUsageTarget:  '1000'
     authenticationRef:
-      name: kedalab-trigger-auth
+      name: pqdemo-trigger-auth

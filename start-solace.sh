@@ -10,14 +10,6 @@ case "$OSTYPE" in
     PORT=55555
 esac
 
-echo Create Namespace 'keda'
-kubectl create namespace keda
-
-echo Install Keda
-helm install keda kedacore/keda -n keda
-
-kubectl wait -n keda --for=condition=Ready -l app.kubernetes.io/instance=keda --timeout=120s --all pods
-
 echo Create Namespace 'solace'
 kubectl create namespace solace
 
@@ -38,7 +30,13 @@ kubectl create secret -n solace generic kedalab-solace-secret \
 echo Create ConfigMap 'kedalab-solace-configmap'
 kubectl delete configmap -n solace generic kedalab-solace-configmap --ignore-not-found
 kubectl create configmap -n solace kedalab-solace-configmap \
-  --from-file config/broker-config \
+  --from-file config/broker-config/keda-demo \
+  --save-config --dry-run=client -o yaml | kubectl apply -f -
+
+echo Create ConfigMap 'pqdemo-solace-configmap'
+kubectl delete configmap -n solace generic pqdemo-solace-configmap --ignore-not-found
+kubectl create configmap -n solace pqdemo-solace-configmap \
+  --from-file config/broker-config/pq-demo \
   --save-config --dry-run=client -o yaml | kubectl apply -f -
 
 echo Create Pod 'kedalab-helper'
@@ -58,7 +56,7 @@ kubectl create secret -n solace generic solace-consumer-secret \
 echo Create ConfigMap 'solace-consumer-configmap'
 kubectl create configmap -n solace solace-consumer-configmap \
   --from-literal=solace.client.port=$PORT \
-  --from-literal=solace.vpn.name=default \
+  --from-literal=solace.vpn.name=keda_vpn \
   --save-config --dry-run=client -o yaml | kubectl apply -f -
 
 echo Create Pod 'solace-consumer'

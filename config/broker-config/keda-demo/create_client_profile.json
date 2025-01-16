@@ -1,0 +1,9 @@
+{
+  "msgVpnName": "keda_vpn",
+  "clientProfileName": "keda_client_profile",
+  "allowSharedSubscriptionsEnabled" : true,
+  "allowGuaranteedMsgReceiveEnabled" : true,
+  "allowGuaranteedMsgSendEnabled" : true,
+  "allowBridgeConnectionsEnabled" : true,
+  "allowGuaranteedEndpointCreateEnabled": true
+}
