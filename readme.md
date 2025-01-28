@@ -160,7 +160,7 @@ Run the broker admin UI by `http://localhost:8080` and login with user `admin` a
 
 ## Deploy apps and configure Solace Broker
 
-### Create kedalab-helper pods
+### Create kedalab-helper pod
 The kedalab-help pod contains configuration scripts and tools we need to complete the lab. We will create it on our Kubernetes cluster.
 
 ### Create the kedalab solace secret

@@ -12,5 +12,8 @@ kubectl delete secret -n pq-demo generic pqdemo-solace-secrets --ignore-not-foun
 echo Delete Secret 'solace-pqdemo-secrets'
 kubectl delete secret -n pq-demo generic solace-pqdemo-secrets --ignore-not-found
 
+echo Delete ConfigMap 'pqdemo-solace-configmap'
+kubectl delete configmap -n pq-demo generic pqdemo-solace-configmap --ignore-not-found
+
 echo Delete Namespace 'pq-demo'
 kubectl delete namespace pq-demo

@@ -22,9 +22,6 @@ kubectl delete secret -n solace generic solace-consumer-secret --ignore-not-foun
 echo Delete ConfigMap 'kedalab-solace-configmap'
 kubectl delete configmap -n solace generic kedalab-solace-configmap --ignore-not-found
 
-echo Delete ConfigMap 'pqdemo-solace-configmap'
-kubectl delete configmap -n pq-demo generic pqdemo-solace-configmap --ignore-not-found
-
 echo Delete Namespace 'solace'
 kubectl delete namespace solace
 
